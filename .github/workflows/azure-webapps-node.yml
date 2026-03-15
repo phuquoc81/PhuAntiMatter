@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: phuoptimizer 81  # set this to your application's name
+  AZURE_WEBAPP_NAME: phuoptimizer81   # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x'                # set this to the node version to use
 
@@ -40,13 +40,16 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
 
     - name: npm install, build, and test
       run: |
-        npm install
-        npm run build --if-present
-        npm run test --if-present
+        if [ -f package.json ]; then
+          npm install
+          npm run build --if-present
+          npm run test --if-present
+        else
+          echo "No package.json found; skipping npm install, build, and test."
+        fi
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
@@ -61,16 +64,27 @@ jobs:
     needs: build
     environment:
       name: 'Development'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
+    - name: Check Azure publish profile
+      id: azure-publish-profile
+      run: |
+        if [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" ]; then
+          echo "present=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "present=false" >> "$GITHUB_OUTPUT"
+          echo "AZURE_WEBAPP_PUBLISH_PROFILE is not configured; skipping deployment."
+        fi
+
     - name: Download artifact from build job
+      if: steps.azure-publish-profile.outputs.present == 'true'
       uses: actions/download-artifact@v4
       with:
         name: node-app
 
     - name: 'Deploy to Azure WebApp'
       id: deploy-to-webapp
+      if: steps.azure-publish-profile.outputs.present == 'true'
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
