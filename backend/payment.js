@@ -17,12 +17,12 @@ function createPurchase({ amount, paymentMethod }) {
   return { error: 'unsupported payment method', status: 400 };
 }
 
-async function buyTokens(req, res) {
+function buyTokens(req, res) {
   const amount = Number(req.body?.amount);
   const paymentMethod = req.body?.payment_method || 'stripe';
   const result = createPurchase({ amount, paymentMethod });
 
-  res.writeHead(result.status, { 'Content-Type': 'application/json' });
+  res.writeHead(result.status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(result.purchase || { error: result.error }));
 }
 
