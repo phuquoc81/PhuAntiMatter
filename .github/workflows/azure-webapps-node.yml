@@ -25,7 +25,6 @@ on:
 env:
   AZURE_WEBAPP_NAME: ''               # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
-  AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
   NODE_VERSION: '20.x'                # set this to the node version to use
 
 permissions:
@@ -49,10 +48,6 @@ jobs:
         npm run build --if-present
         npm run test --if-present
 
-    - name: Skip npm install, build, and test
-      if: ${{ hashFiles('package.json') == '' }}
-      run: echo "No package.json found, so npm install, build, and test were skipped."
-
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
@@ -66,20 +61,28 @@ jobs:
     needs: build
 
     steps:
+    - name: Check Azure deployment configuration
+      id: azure-deploy-config
+      env:
+        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      run: |
+        if [ "${GITHUB_REF}" = "refs/heads/main" ] && [ -n "${AZURE_WEBAPP_NAME}" ] && [ -n "${AZURE_WEBAPP_PUBLISH_PROFILE}" ]; then
+          echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+        fi
+
     - name: Download artifact from build job
+      if: ${{ steps.azure-deploy-config.outputs.should_deploy == 'true' }}
       uses: actions/download-artifact@v4
       with:
         name: node-app
 
     - name: 'Deploy to Azure WebApp'
       id: deploy-to-webapp
-      if: ${{ github.ref == 'refs/heads/main' && env.AZURE_WEBAPP_NAME != '' && env.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
+      if: ${{ steps.azure-deploy-config.outputs.should_deploy == 'true' }}
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-
-    - name: Skip Azure WebApp deployment
-      if: ${{ github.ref != 'refs/heads/main' || env.AZURE_WEBAPP_NAME == '' || env.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
-      run: echo "Skipping Azure deployment because this is not the main branch or the Azure deployment settings are not configured."
