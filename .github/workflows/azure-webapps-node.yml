@@ -60,6 +60,7 @@ jobs:
         path: .
 
   deploy:
+    if: ${{ github.ref == 'refs/heads/main' && env.AZURE_WEBAPP_NAME != '' && env.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
     permissions:
       contents: none
     runs-on: ubuntu-latest
@@ -76,13 +77,8 @@ jobs:
 
     - name: 'Deploy to Azure WebApp'
       id: deploy-to-webapp
-      if: ${{ github.ref == 'refs/heads/main' && env.AZURE_WEBAPP_NAME != '' && env.AZURE_WEBAPP_PUBLISH_PROFILE != '' }}
       uses: azure/webapps-deploy@v2
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-
-    - name: Skip Azure WebApp deployment
-      if: ${{ github.ref != 'refs/heads/main' || env.AZURE_WEBAPP_NAME == '' || env.AZURE_WEBAPP_PUBLISH_PROFILE == '' }}
-      run: echo "Skipping Azure deployment because this is not the main branch or the Azure deployment settings are not configured."
