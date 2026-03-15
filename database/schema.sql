@@ -1,0 +1,28 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  phu_tokens INTEGER DEFAULT 0,
+  gold_coins INTEGER DEFAULT 0,
+  points INTEGER DEFAULT 0,
+  dimension INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE transactions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  amount NUMERIC(10, 2) NOT NULL,
+  tokens INTEGER DEFAULT 0,
+  payment_method TEXT NOT NULL,
+  status TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE achievements (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  badge TEXT NOT NULL,
+  date_unlocked TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

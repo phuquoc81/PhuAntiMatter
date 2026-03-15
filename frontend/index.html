@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PhuAntimatter Reactor</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="card">
+        <h1>PhuAntimatter Reactor</h1>
+        <p id="multiplayer-status">Multiplayer: offline local mode</p>
+        <div class="stats">
+          <p>Antimatter: <strong id="antimatter">0</strong></p>
+          <p>Dimension: <strong id="dimension">1</strong></p>
+          <p>Multiplier: <strong id="multiplier">1</strong></p>
+          <p>PHU81 Tokens: <strong id="tokens">0</strong></p>
+        </div>
+        <div class="actions">
+          <button id="mine-button" type="button">Mine Antimatter</button>
+          <button id="reactor-button" type="button">Upgrade Reactor</button>
+          <button id="dimension-button" type="button">Upgrade Dimension</button>
+          <button id="convert-button" type="button">Convert 1000 Antimatter</button>
+        </div>
+        <form id="payment-form" class="payment">
+          <label>
+            Buy Tokens ($)
+            <input id="payment-amount" name="amount" type="number" min="1" value="5">
+          </label>
+          <label>
+            Payment Method
+            <select id="payment-method" name="payment_method">
+              <option value="stripe">Stripe</option>
+              <option value="etransfer">E-Transfer</option>
+            </select>
+          </label>
+          <button type="submit">Start Purchase</button>
+        </form>
+        <p id="payment-result" class="message"></p>
+        <h2>Achievements</h2>
+        <ul id="achievements"></ul>
+      </section>
+    </main>
+    <script type="module" src="./game.js"></script>
+  </body>
+</html>
