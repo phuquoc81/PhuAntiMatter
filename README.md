@@ -1,3 +1,5 @@
+<a href="https://github.com/phuquoc81/PhuAntiMatter/actions/workflows/azure-webapps-node.yml"><img src="https://github.com/phuquoc81/PhuAntiMatter/actions/workflows/azure-webapps-node.yml/badge.svg"></a>
+
 # Phu-ai
 [![Azure Web Apps Workflow](https://github.com/phuquoc81/PhuAntiMatter/actions/workflows/azure-webapps-node.yml/badge.svg)](https://github.com/phuquoc81/PhuAntiMatter/actions/workflows/azure-webapps-node.yml)
 
