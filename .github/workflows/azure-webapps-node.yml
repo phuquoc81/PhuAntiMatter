@@ -129,7 +129,7 @@ jobs:
             for path in sorted(package_path.rglob("*")):
                 if path.is_dir():
                     continue
-                if ".git" in path.parts:
+                if any(part in {".git", ".github", "node_modules"} for part in path.parts):
                     continue
                 archive.write(path, path.relative_to(package_path))
 
