@@ -88,11 +88,43 @@ jobs:
       with:
         name: node-app
 
-    - name: 'Deploy to Azure WebApp'
+    - name: Deploy to Azure WebApp
       id: deploy-to-webapp
       if: ${{ steps.azure-deploy-config.outputs.should_deploy == 'true' }}
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      env:
+        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+      run: |
+        python - <<'PY'
+        import os
+        import pathlib
+        import xml.etree.ElementTree as ET
+
+        root = ET.fromstring(os.environ["AZURE_WEBAPP_PUBLISH_PROFILE"])
+        profiles = root.findall(".//publishProfile")
+        profile = next((p for p in profiles if "scm." in p.attrib.get("publishUrl", "")), None)
+        if profile is None and profiles:
+            profile = profiles[0]
+        if profile is None:
+            raise SystemExit("No Azure publish profile entries were found.")
+
+        publish_url = profile.attrib["publishUrl"].split(":", 1)[0]
+        netrc_path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "azure-webapp.netrc"
+        netrc_path.write_text(
+            f"machine {publish_url}\n"
+            f"login {profile.attrib['userName']}\n"
+            f"password {profile.attrib['userPWD']}\n",
+            encoding="utf-8",
+        )
+        netrc_path.chmod(0o600)
+
+        with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as github_env:
+            github_env.write(f"AZURE_WEBAPP_DEPLOY_HOST={publish_url}\n")
+            github_env.write(f"AZURE_WEBAPP_NETRC_PATH={netrc_path}\n")
+        PY
+
+        zip -r "$RUNNER_TEMP/node-app.zip" . -x '.git/*'
+        curl --fail --silent --show-error \
+          --netrc-file "$AZURE_WEBAPP_NETRC_PATH" \
+          -H "Content-Type: application/zip" \
+          --data-binary @"$RUNNER_TEMP/node-app.zip" \
+          "https://${AZURE_WEBAPP_DEPLOY_HOST}/api/zipdeploy"
