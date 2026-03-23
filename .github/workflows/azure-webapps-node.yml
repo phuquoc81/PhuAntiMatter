@@ -19,7 +19,7 @@
 
 on:
   push:
-    branches: [ "main", "copilot/**" ]  # run on copilot branches so branch-scoped workflow badges can update
+    branches: [ "main", "copilot/**" ]  # run on copilot branches so workflow changes can be validated before merge
   workflow_dispatch:
 
 env:
