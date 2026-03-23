@@ -97,7 +97,9 @@ jobs:
         python - <<'PY'
         import os
         import pathlib
+        import urllib.parse
         import xml.etree.ElementTree as ET
+        import zipfile
 
         root = ET.fromstring(os.environ["AZURE_WEBAPP_PUBLISH_PROFILE"])
         profiles = root.findall(".//publishProfile")
@@ -107,10 +109,33 @@ jobs:
         if profile is None:
             raise SystemExit("No Azure publish profile entries were found.")
 
-        publish_url = profile.attrib["publishUrl"].split(":", 1)[0]
+        publish_url = profile.attrib["publishUrl"]
+        parsed_publish_url = urllib.parse.urlparse(
+            publish_url if "://" in publish_url else f"https://{publish_url}"
+        )
+        deploy_host = parsed_publish_url.hostname
+        if not deploy_host:
+            raise SystemExit("Could not determine the Azure deployment host from the publish profile.")
+
+        package_path = pathlib.Path(os.environ["AZURE_WEBAPP_PACKAGE_PATH"])
+        if not package_path.is_absolute():
+            package_path = pathlib.Path(os.environ["GITHUB_WORKSPACE"]) / package_path
+        package_path = package_path.resolve()
+        if not package_path.exists():
+            raise SystemExit(f"Azure package path does not exist: {package_path}")
+
+        archive_path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "node-app.zip"
+        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            for path in sorted(package_path.rglob("*")):
+                if path.is_dir():
+                    continue
+                if ".git" in path.parts:
+                    continue
+                archive.write(path, path.relative_to(package_path))
+
         netrc_path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "azure-webapp.netrc"
         netrc_path.write_text(
-            f"machine {publish_url}\n"
+            f"machine {deploy_host}\n"
             f"login {profile.attrib['userName']}\n"
             f"password {profile.attrib['userPWD']}\n",
             encoding="utf-8",
@@ -118,13 +143,13 @@ jobs:
         netrc_path.chmod(0o600)
 
         with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as github_env:
-            github_env.write(f"AZURE_WEBAPP_DEPLOY_HOST={publish_url}\n")
+            github_env.write(f"AZURE_WEBAPP_ARCHIVE_PATH={archive_path}\n")
+            github_env.write(f"AZURE_WEBAPP_DEPLOY_HOST={deploy_host}\n")
             github_env.write(f"AZURE_WEBAPP_NETRC_PATH={netrc_path}\n")
         PY
 
-        zip -r "$RUNNER_TEMP/node-app.zip" . -x '.git/*'
         curl --fail --silent --show-error \
           --netrc-file "$AZURE_WEBAPP_NETRC_PATH" \
           -H "Content-Type: application/zip" \
-          --data-binary @"$RUNNER_TEMP/node-app.zip" \
+          --data-binary @"$AZURE_WEBAPP_ARCHIVE_PATH" \
           "https://${AZURE_WEBAPP_DEPLOY_HOST}/api/zipdeploy"
