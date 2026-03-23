@@ -1,0 +1,22 @@
+{
+  "name": "phuantimatter",
+  "version": "1.0.0",
+  "description": "Minimal PhuAntimatter game and API skeleton.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phuquoc81/PhuAntiMatter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/phuquoc81/PhuAntiMatter/issues"
+  },
+  "homepage": "https://github.com/phuquoc81/PhuAntiMatter#readme"
+}
