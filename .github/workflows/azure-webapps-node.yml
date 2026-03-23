@@ -19,13 +19,11 @@
 
 on:
   push:
-    branches: [ "main", "copilot/**" ]
     branches: [ "main", "copilot/**" ]  # run on copilot branches so branch-scoped workflow badges can update
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: your-azure-webapp-name  # replace this placeholder before running workflow_dispatch deployments
-  AZURE_WEBAPP_NAME: ''               # set this when enabling main-branch Azure Web App deployments
+  AZURE_WEBAPP_NAME: ''               # set this to your Azure Web App name when enabling main-branch deployments
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   NODE_VERSION: '20.x'                # set this to the node version to use
 
