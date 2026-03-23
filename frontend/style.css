@@ -1,0 +1,55 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg, #0b1022, #17203c);
+  color: #f8fafc;
+}
+
+.app {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+}
+
+.card {
+  width: min(100%, 32rem);
+  padding: 2rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.4);
+}
+
+.stats,
+.actions,
+.payment {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.actions,
+.payment {
+  margin-top: 1rem;
+}
+
+button,
+input,
+select {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #334155;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: #38bdf8;
+  color: #082f49;
+  font-weight: 700;
+}
+
+.message {
+  min-height: 1.5rem;
+  margin-top: 1rem;
+}
